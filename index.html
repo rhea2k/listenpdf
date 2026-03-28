@@ -48,11 +48,17 @@
               <input type="range" id="speed-range" min="0.5" max="2" step="0.1" value="1"/>
               <span id="speed-value">1.0x</span>
             </label>
-            <label class="premium-option">
-              <input type="checkbox" id="premium-voice" disabled/>
-              Use Premium AI Voice (higher quality)
-              <button class="unlock-btn" id="unlock-premium" title="Unlock with crypto">🔒</button>
-            </label>
+            <div class="normalization-settings">
+              <label>
+                <input type="checkbox" id="advanced-normalization" checked/>
+                Advanced Text Normalization (fixes OCR errors, improves flow)
+              </label>
+              <label class="premium-option">
+                <input type="checkbox" id="premium-voice" disabled/>
+                Use Premium AI Voice (higher quality)
+                <button class="unlock-btn" id="unlock-premium" title="Unlock with crypto">🔒</button>
+              </label>
+            </div>
           </div>
 
           <div class="playback-controls">
@@ -104,6 +110,7 @@
     </footer>
   </div>
 
+  <script src="text-normalizer.js"></script>
   <script src="app.js"></script>
 </body>
 </html>

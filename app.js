@@ -1,14 +1,13 @@
 // ListenPDF - Privacy-First PDF to Speech
 // Everything runs in the browser. No data is sent to any server.
 
-// Config (will be updated when user provides API key/crypto addresses)
+// Config (update as needed)
 const CONFIG = {
-  openaiApiKey: '', // Set later from user-provided key
   cryptoAddresses: {
     btc: '1YourBitcoinAddressHere',
     eth: '0xYourEthereumAddressHere'
   },
-  premiumUnlocked: false
+  premiumUnlocked: false   // Will be set after manual unlock verification
 };
 
 // PDF.js setup
@@ -35,6 +34,7 @@ const textContent = document.getElementById('text-content');
 const voiceSelect = document.getElementById('voice-select');
 const speedRange = document.getElementById('speed-range');
 const speedValue = document.getElementById('speed-value');
+const advancedNormalizationCheckbox = document.getElementById('advanced-normalization');
 const premiumVoiceCheckbox = document.getElementById('premium-voice');
 const playBtn = document.getElementById('play-btn');
 const pauseBtn = document.getElementById('pause-btn');
@@ -160,9 +160,44 @@ async function handleFile(file) {
       fullText += pageText + '\n';
     }
 
-    // Split into words for progress tracking
-    words = fullText.split(/\s+/).filter(w => w.length > 0);
-    textContent.textContent = fullText;
+    // Apply text normalization for better TTS
+    const rawText = fullText;
+    const normalizer = new TextNormalizer();
+    
+    // Show loading state
+    textContent.textContent = 'Processing text for better audio quality...';
+    
+    try {
+      if (advancedNormalizationCheckbox.checked) {
+        // Use advanced normalization with LLM
+        fullText = await normalizer.advancedNormalize(rawText, {
+          fixOCR: true,
+          expandAbbr: false
+        });
+      } else {
+        // Use basic normalization
+        fullText = normalizer.normalize(rawText, {
+          fixOCR: true,
+          expandAbbr: false,
+          formatParagraphs: true
+        });
+      }
+      
+      // Split into words for progress tracking
+      words = fullText.split(/\s+/).filter(w => w.length > 0);
+      textContent.textContent = fullText;
+      
+    } catch (error) {
+      console.error('Text normalization failed:', error);
+      // Fall back to basic normalization
+      fullText = normalizer.normalize(rawText, {
+        fixOCR: true,
+        expandAbbr: false,
+        formatParagraphs: true
+      });
+      words = fullText.split(/\s+/).filter(w => w.length > 0);
+      textContent.textContent = fullText;
+    }
 
     uploadSection.classList.add('hidden');
     playerSection.classList.remove('hidden');
@@ -191,9 +226,10 @@ function populateVoiceList() {
 function startPlaying() {
   if (isPlaying) return;
 
-  // Create utterance
-  const textToSpeak = premiumVoiceCheckbox.checked && CONFIG.openaiApiKey ?
-    fullText : fullText; // We'll handle premium differently (streaming or full generation)
+  // For now, always use Web Speech API.
+  // Premium voice (OpenAI) will be implemented later as an optional download/MP3 feature.
+
+  const textToSpeak = fullText;
 
   currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
   const selectedVoiceIndex = voiceSelect.value;
@@ -243,30 +279,16 @@ function verifyUnlock() {
     return;
   }
   // In a real implementation, we'd verify on-chain or via webhook.
-  // For now, simulate success after manual review.
-  alert('Thank you! We will verify your transaction and unlock premium features within 24 hours. For faster service, email us the tx ID.');
-  // Actually, we could auto-unlock after some delay if we had a backend.
-  // But I'll keep it manual for now to avoid complexity.
+  // For now, just thank the user and note manual verification within 24h.
+  alert('Thank you for your support! We will verify your transaction and enable premium features within 24 hours. For now, you can continue using the free version.');
   document.getElementById('manual-unlock-form').classList.add('hidden');
   modal.classList.add('hidden');
 }
 
 // Placeholder for OpenAI TTS download
 async function generateMP3WithOpenAI() {
-  if (!CONFIG.openaiApiKey) {
-    alert('OpenAI API key not configured. Please provide it to enable premium TTS.');
-    return;
-  }
-  // Split text into chunks (OpenAI TTS limit ~4K chars per request)
-  const chunkSize = 4000;
-  const chunks = [];
-  for (let i = 0; i < fullText.length; i += chunkSize) {
-    chunks.push(fullText.substring(i, i + chunkSize));
-  }
-  // This would require backend to combine files or use streaming; too heavy for pure client.
-  // For now, show message about future implementation.
-  alert('MP3 generation with premium voice is coming soon. For now, you can use the live playback.');
-  // Alternatively, we could do client-side synthesis with many requests but that's heavy.
+  // Premium feature coming soon
+  alert('MP3 download with premium AI voice is coming soon. For now, enjoy free listening!');
 }
 
 downloadBtn.addEventListener('click', generateMP3WithOpenAI);

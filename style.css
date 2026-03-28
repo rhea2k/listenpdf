@@ -33,6 +33,7 @@ header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
 .voice-settings { display: grid; gap: 12px; margin-bottom: 20px; }
 .voice-settings label { display: flex; align-items: center; gap: 10px; font-weight: 500; }
 .voice-settings select, .voice-settings input[type="range"] { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px; }
+.normalization-settings { margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); }
 .premium-option { position: relative; }
 .unlock-btn { background: none; border: none; cursor: pointer; font-size: 1rem; margin-left: 6px; vertical-align: middle; }
 .unlock-btn.large { padding: 12px 24px; font-size: 1.2rem; }

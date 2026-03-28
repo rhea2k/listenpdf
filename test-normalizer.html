@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Normalizer Test</title>
+  <script src="text-normalizer.js"></script>
+</head>
+<body>
+  <h1>Text Normalizer Test</h1>
+  
+  <div>
+    <h3>Input Text (simulating OCR errors):</h3>
+    <textarea id="inputText" rows="10" cols="80">
+tlie quick brown fox jumped over tlie lazy dog.
+whicli was quite an impressive feat. tliis is a test
+of tlie OCR correction system. cl vs d, rn vs m.
+
+This is a hyphen-
+ated word that should be joined.
+
+Multiple   spaces   should   be   fixed. And
+line breaks in the middle of sentences should
+be handled properly.
+
+e.g., abbreviations like etc. and i.e. can be expanded.
+    </textarea>
+  </div>
+  
+  <div>
+    <button onclick="testNormalization()">Test Normalization</button>
+  </div>
+  
+  <div>
+    <h3>Normalized Output:</h3>
+    <textarea id="outputText" rows="10" cols="80" readonly></textarea>
+  </div>
+  
+  <script>
+    function testNormalization() {
+      const input = document.getElementById('inputText').value;
+      const normalizer = new TextNormalizer();
+      
+      // Test basic normalization
+      const normalized = normalizer.normalize(input, {
+        fixOCR: true,
+        expandAbbr: true,
+        formatParagraphs: true
+      });
+      
+      document.getElementById('outputText').value = normalized;
+    }
+    
+    // Run test on load
+    window.onload = testNormalization;
+  </script>
+</body>
+</html>
