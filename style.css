@@ -1,0 +1,76 @@
+:root {
+  --bg: #f9f9f9;
+  --text: #222;
+  --primary: #2563eb;
+  --primary-dark: #1d4ed8;
+  --secondary: #64748b;
+  --border: #e2e8f0;
+  --success: #10b981;
+  --premium: #f59e0b;
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; padding: 20px; }
+.container { max-width: 800px; margin: 0 auto; background: white; border-radius: 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.08); padding: 30px; }
+header { text-align: center; margin-bottom: 30px; }
+header h1 { font-size: 2.5rem; margin-bottom: 0.5rem; letter-spacing: -0.02em; }
+.tagline { color: var(--secondary); font-size: 1.1rem; }
+
+/* Upload */
+.upload-box { border: 2px dashed var(--border); border-radius: 10px; padding: 50px; text-align: center; cursor: pointer; transition: border-color 0.2s; }
+.upload-box:hover { border-color: var(--primary); }
+.upload-box p { font-size: 1.1rem; color: var(--secondary); }
+.link-btn { background: none; border: none; color: var(--primary); text-decoration: underline; cursor: pointer; font-size: inherit; }
+
+.hidden { display: none !important; }
+
+/* Player */
+#player-section { margin-top: 20px; }
+.pdf-info { margin-bottom: 20px; padding-bottom: 15px; border-bottom: 1px solid var(--border); }
+.text-preview { margin: 20px 0; max-height: 200px; overflow-y: auto; padding: 15px; background: #f8fafc; border-radius: 8px; font-family: monospace; white-space: pre-wrap; }
+
+.controls { background: #f1f5f9; padding: 20px; border-radius: 10px; }
+.voice-settings { display: grid; gap: 12px; margin-bottom: 20px; }
+.voice-settings label { display: flex; align-items: center; gap: 10px; font-weight: 500; }
+.voice-settings select, .voice-settings input[type="range"] { flex: 1; padding: 8px; border: 1px solid var(--border); border-radius: 6px; }
+.premium-option { position: relative; }
+.unlock-btn { background: none; border: none; cursor: pointer; font-size: 1rem; margin-left: 6px; vertical-align: middle; }
+.unlock-btn.large { padding: 12px 24px; font-size: 1.2rem; }
+
+.playback-controls { display: flex; gap: 12px; justify-content: center; margin: 20px 0; }
+.primary { background: var(--primary); color: white; border: none; padding: 12px 24px; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1rem; transition: background 0.2s; }
+.primary:hover { background: var(--primary-dark); }
+.primary:disabled { background: var(--secondary); cursor: not-allowed; }
+button:not(.primary) { background: white; border: 1px solid var(--border); padding: 10px 20px; border-radius: 8px; cursor: pointer; }
+button:not(.primary):disabled { opacity: 0.5; cursor: not-allowed; }
+
+.progress { display: flex; align-items: center; gap: 10px; margin-top: 10px; }
+progress { flex: 1; height: 8px; border-radius: 4px; }
+#progress-text { font-size: 0.9rem; color: var(--secondary); min-width: 45px; text-align: right; }
+
+.download-option { margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px; border: 1px solid var(--premium); }
+
+/* Modal */
+.modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+.modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }
+.close { position: absolute; top: 15px; right: 15px; cursor: pointer; font-size: 1.5rem; color: var(--secondary); }
+.crypto-options { margin: 20px 0; }
+.crypto-options li { list-style: none; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.crypto-options code { background: #f1f5f9; padding: 4px 8px; border-radius: 4px; font-family: monospace; word-break: break-all; }
+.copy-btn { background: var(--primary); color: white; border: none; padding: 4px 10px; border-radius: 4px; font-size: 0.8rem; cursor: pointer; }
+.copy-btn:hover { background: var(--primary-dark); }
+.note { background: #f0fdf4; padding: 12px; border-radius: 6px; border: 1px solid #bbf7d0; margin: 10px 0; font-size: 0.95rem; }
+.small { font-size: 0.85rem; color: var(--secondary); }
+#manual-unlock-form { margin-top: 20px; display: flex; gap: 10px; }
+#tx-hash { flex: 1; padding: 10px; border: 1px solid var(--border); border-radius: 6px; }
+
+/* Footer */
+footer { text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid var(--border); color: var(--secondary); font-size: 0.9rem; }
+.crypto-donate a { color: var(--primary); }
+
+/* Responsive */
+@media (max-width: 600px) {
+  .container { padding: 15px; }
+  .playback-controls { flex-wrap: wrap; }
+  .controls { padding: 15px; }
+}

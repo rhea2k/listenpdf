@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>ListenPDF - Privacy-First PDF Reader that Speaks</title>
+  <link rel="stylesheet" href="style.css"/>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ListenPDF</h1>
+      <p class="tagline">Upload a PDF, listen with natural voices. No data leaves your browser.</p>
+    </header>
+
+    <main>
+      <!-- Upload Section -->
+      <section id="upload-section">
+        <div class="upload-box" id="drop-area">
+          <input type="file" id="pdf-upload" accept=".pdf" hidden/>
+          <p>Drag & drop a PDF here, or <button class="link-btn" onclick="document.getElementById('pdf-upload').click()">browse</button></p>
+        </div>
+      </section>
+
+      <!-- Player Section (hidden until PDF loaded) -->
+      <section id="player-section" class="hidden">
+        <div class="pdf-info">
+          <h2 id="pdf-title">PDF Title</h2>
+          <p id="page-count">Pages: 0</p>
+        </div>
+
+        <!-- Text Preview -->
+        <div class="text-preview">
+          <h3>Extracted Text</h3>
+          <div id="text-content"></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="controls">
+          <div class="voice-settings">
+            <label>
+              Voice:
+              <select id="voice-select"></select>
+            </label>
+            <label>
+              Speed:
+              <input type="range" id="speed-range" min="0.5" max="2" step="0.1" value="1"/>
+              <span id="speed-value">1.0x</span>
+            </label>
+            <label class="premium-option">
+              <input type="checkbox" id="premium-voice" disabled/>
+              Use Premium AI Voice (higher quality)
+              <button class="unlock-btn" id="unlock-premium" title="Unlock with crypto">🔒</button>
+            </label>
+          </div>
+
+          <div class="playback-controls">
+            <button id="play-btn" class="primary">▶ Play</button>
+            <button id="pause-btn" disabled>⏸ Pause</button>
+            <button id="stop-btn" disabled>⏹ Stop</button>
+          </div>
+
+          <div class="progress">
+            <progress id="progress-bar" value="0" max="100"></progress>
+            <span id="progress-text">0%</span>
+          </div>
+        </div>
+
+        <div class="download-option hidden" id="download-section">
+          <h3>Download Audio</h3>
+          <p>Premium feature: Generate and download MP3 of the entire PDF.</p>
+          <button id="download-btn" class="primary" disabled>Generate MP3</button>
+          <button class="unlock-btn large" id="unlock-download">🔒 Unlock Download</button>
+        </div>
+      </section>
+
+      <!-- Premium Unlock Modal -->
+      <div id="premium-modal" class="modal hidden">
+        <div class="modal-content">
+          <span class="close">&times;</span>
+          <h2>Unlock Premium Features</h2>
+          <p>Support development and access high-quality AI voices, MP3 downloads, and more.</p>
+          <div class="crypto-options">
+            <p><strong>Send cryptocurrency to:</strong></p>
+            <ul id="crypto-addresses">
+              <li>BTC: <code class="address">1YourBitcoinAddressHere</code> <button class="copy-btn">Copy</button></li>
+              <li>ETH: <code class="address">0xYourEthereumAddressHere</code> <button class="copy-btn">Copy</button></li>
+            </ul>
+            <p class="note">After sending, <a href="mailto:?subject=ListenPDF%20Premium%20Unlock">email us</a> with transaction ID to unlock instantly.</p>
+            <p class="small">Alternatively, <a href="#" id="manual-unlock">enter your transaction manually</a>.</p>
+          </div>
+          <div id="manual-unlock-form" class="hidden">
+            <input type="text" id="tx-hash" placeholder="Transaction hash"/>
+            <button id="verify-unlock">Verify & Unlock</button>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer>
+      <p>No data is sent to any server. Everything runs in your browser.</p>
+      <p class="crypto-donate">Like this tool? <a href="#" id="donate-link">Donate crypto</a> to keep it running.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
