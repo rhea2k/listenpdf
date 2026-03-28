@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ListenPDF - Text Normalization Demo</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; line-height: 1.6; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 1200px; margin: 0 auto; }
+    header { text-align: center; margin-bottom: 30px; }
+    h1 { color: #2563eb; margin-bottom: 10px; }
+    .tagline { color: #64748b; font-size: 1.2rem; }
+    
+    .demo-section { 
+      background: white; 
+      border-radius: 12px; 
+      padding: 25px; 
+      margin-bottom: 25px; 
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    }
+    
+    h2 { color: #334155; margin-bottom: 20px; border-bottom: 2px solid #e2e8f0; padding-bottom: 10px; }
+    
+    .text-area { 
+      width: 100%; 
+      height: 200px; 
+      padding: 15px; 
+      border: 2px solid #e2e8f0; 
+      border-radius: 8px; 
+      font-family: monospace; 
+      font-size: 14px; 
+      resize: vertical;
+    }
+    
+    .text-area.normalized { border-color: #10b981; }
+    .text-area.original { border-color: #f59e0b; }
+    
+    .controls { 
+      display: flex; 
+      gap: 15px; 
+      margin: 20px 0; 
+      flex-wrap: wrap;
+    }
+    
+    button { 
+      background: #2563eb; 
+      color: white; 
+      border: none; 
+      padding: 12px 24px; 
+      border-radius: 8px; 
+      cursor: pointer; 
+      font-weight: 600;
+      transition: background 0.2s;
+    }
+    
+    button:hover { background: #1d4ed8; }
+    button.secondary { background: #64748b; }
+    button.success { background: #10b981; }
+    
+    .results-grid { 
+      display: grid; 
+      grid-template-columns: 1fr 1fr; 
+      gap: 25px; 
+      margin-top: 20px;
+    }
+    
+    @media (max-width: 768px) {
+      .results-grid { grid-template-columns: 1fr; }
+    }
+    
+    .quality-score { 
+      background: #f0f9ff; 
+      border: 1px solid #bae6fd; 
+      border-radius: 8px; 
+      padding: 15px; 
+      margin: 15px 0;
+    }
+    
+    .score-badge { 
+      display: inline-block; 
+      padding: 5px 12px; 
+      border-radius: 20px; 
+      font-weight: bold; 
+      margin-right: 10px;
+    }
+    
+    .score-good { background: #d1fae5; color: #065f46; }
+    .score-medium { background: #fef3c7; color: #92400e; }
+    .score-poor { background: #fee2e2; color: #991b1b; }
+    
+    .correction-list { 
+      background: #f8fafc; 
+      border-radius: 8px; 
+      padding: 15px; 
+      margin-top: 15px; 
+      max-height: 200px; 
+      overflow-y: auto;
+    }
+    
+    .correction-item { 
+      padding: 8px; 
+      border-bottom: 1px solid #e2e8f0; 
+      font-family: monospace;
+    }
+    
+    .correction-item:last-child { border-bottom: none; }
+  </style>
+  <script src="text-quality-scorer.js"></script>
+  <script src="text-normalizer.js"></script>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>ListenPDF - Text Normalization Demo</h1>
+      <p class="tagline">Transforming OCR'd PDF text into natural-sounding audio</p>
+    </header>
+    
+    <section class="demo-section">
+      <h2>📄 Sample OCR'd Text</h2>
+      <p>This text simulates common OCR errors from scanned PDFs. Try normalizing it!</p>
+      
+      <textarea id="sampleText" class="text-area original">
+INTERNATIONAL JOURNAL OF COMPUTER SCIENCE
+Vol. 45, No. 3, pp. 123-145, 2023
+
+Page 1 of 10
+
+Tlie Impact of Artiticial Intelligence on Modern Society
+
+John Smith¹, Jane Doe²
+
+Abstract—Tliis paper examines tlie profound impact that 
+Artiticial Intelligence (AI) lias had on various sectors of 
+modern society. We discuss tlie etliical considerations and 
+tlie potential risks associated with rapid AI development.
+
+I. INTRODUCTION
+
+Artiticial Intelligence lias become one of tlie most 
+transformative technologies of tlie 2lst century. From 
+healthcare to transportation, AI systems are revolutionizing 
+how we live and work. However, tliis rapid advancement 
+raises important questions about etliics, privacy, and 
+employment.
+
+In tliis paper, we provide a comprehensive analysis of 
+tlie current state of AI and its societal implications. We 
+begin by reviewing tlie historical development of AI, 
+tlien examine its applications across different industries, 
+and finally discuss tlie etliical challenges that must be 
+addressed.
+
+II. HISTORICAL BACKGROUND
+
+Tlie concept of artiticial intelligence dates back to tlie 
+l950s, when computer scientists tirst began exploring tlie 
+idea of creating machines that could mimic human 
+intelligence. Early pioneers like Alan Turing and John 
+McCarthy laid tlie groundwork for what would become 
+one of tlie most exciting fields in computer science.
+
+Page 2
+
+III. METHODOLOGY
+
+Our study employed a mixed-methods approacli, 
+combining quantitative analysis of industry data with 
+qualitative interviews of experts in tlie field. We collected 
+data lrom over l00 companies across l0 different sectors 
+and conducted interviews with 25 AI researchers and 
+industry leaders.
+
+IV. RESULTS AND DISCUSSION
+
+A. Positive Impacts
+
+AI lias led to significant improvements in efficiency and 
+productivity across multiple industries. In healthcare, 
+AI-powered diagnostic tools can detect diseases earlier 
+and more accurately than human doctors. In 
+manufacturing, predictive maintenance algorithms reduce 
+downtime and save companies millions of dollars.
+
+B. Negative Impacts
+
+Despite its benefits, AI also presents several challenges. 
+Job displacement is a major concern, as automation 
+replaces human workers in certain tasks. Algorithmic bias 
+is another critical issue, as AI systems can perpetuate and 
+amplify existing societal biases.
+
+V. CONCLUSION
+
+Artiticial Intelligence represents both tremendous 
+opportunity and significant risk. As we continue to 
+develop more advanced AI systems, it is crucial that we 
+prioritize etliical considerations and implement 
+appropriate safeguards. Future research should focus on 
+developing transparent, accountable, and fair AI systems 
+that benefit all of humanity.
+
+REFERENCES
+
+[1] A. Turing, "Computing Machinery and Intelligence," 
+Mind, vol. 59, no. 236, pp. 433-460, l950.
+
+[2] J. McCarthy, "Programs with Common Sense," 
+Proceedings of the Teddington Conference on the 
+Mechanization of Thought Processes, l959.
+      </textarea>
+    </section>
+    
+    <section class="demo-section">
+      <h2>🎛️ Normalization Controls</h2>
+      <div class="controls">
+        <button onclick="testBasicNormalization()" class="secondary">Basic Normalization</button>
+        <button onclick="testAdaptiveNormalization()">Adaptive Normalization (Smart)</button>
+        <button onclick="testAdvancedNormalization()" class="success">Advanced (LLM) Normalization</button>
+        <button onclick="analyzeOnly()">Analyze Quality Only</button>
+        <button onclick="resetText()">Reset to Original</button>
+      </div>
+      
+      <div class="quality-score" id="qualityScore" style="display: none;">
+        <h3>📊 Text Quality Analysis</h3>
+        <div id="scoreDisplay"></div>
+        <div id="correctionsNeeded"></div>
+      </div>
+    </section>
+    
+    <section class="demo-section">
+      <h2>📈 Results</h2>
+      <div class="results-grid">
+        <div>
+          <h3>Original Text</h3>
+          <textarea id="originalText" class="text-area original" readonly></textarea>
+          <div id="originalScore" style="margin-top: 10px;"></div>
+        </div>
+        <div>
+          <h3>Normalized Text</h3>
+          <textarea id="normalizedText" class="text-area normalized" readonly></textarea>
+          <div id="normalizedScore" style="margin-top: 10px;"></div>
+        </div>
+      </div>
+      
+      <div id="correctionsList" class="correction-list" style="display: none;">
+        <h4>Corrections Applied:</h4>
+        <div id="correctionsContent"></div>
+      </div>
+    </section>
+  </div>
+  
+  <script>
+    const sampleText = document.getElementById('sampleText');
+    const originalText = document.getElementById('originalText');
+    const normalizedText = document.getElementById('normalizedText');
+    const qualityScoreDiv = document.getElementById('qualityScore');
+    const scoreDisplay = document.getElementById('scoreDisplay');
+    const correctionsNeeded = document.getElementById('correctionsNeeded');
+    const originalScoreDiv = document.getElementById('originalScore');
+    const normalizedScoreDiv = document.getElementById('normalizedScore');
+    const correctionsList = document.getElementById('correctionsList');
+    const correctionsContent = document.getElementById('correctionsContent');
+    
+    let currentText = sampleText.value;
+    let normalizer = new TextNormalizer();
+    let qualityScorer = new TextQualityScorer();
+    
+    function updateDisplays(original, normalized, corrections = []) {
+      originalText.value = original;
+      normalizedText.value = normalized;
+      
+      const origAnalysis = qualityScorer.analyze(original);
+      const normAnalysis = qualityScorer.analyze(normalized);
+      
+      // Update scores
+      originalScoreDiv.innerHTML = getScoreHTML(origAnalysis, 'Original');
+      normalizedScoreDiv.innerHTML = getScoreHTML(normAnalysis, 'Normalized');
+      
+      // Show corrections if any
+      if (corrections.length > 0) {
+        correctionsContent.innerHTML = corrections.map(c => 
+          `<div class="correction-item">${c}</div>`
+        ).join('');
+        correctionsList.style.display = 'block';
+      } else {
+        correctionsList.style.display = 'none';
+      }
+    }
+    
+    function getScoreHTML(analysis, label) {
+      let scoreClass = 'score-good';
+      if (analysis.score < 70) scoreClass = 'score-medium';
+      if (analysis.score < 50) scoreClass = 'score-poor';
+      
+      return `
+        <div>
+          <span class="score-badge ${scoreClass}">${analysis.score}/100</span>
+          ${label} Text Quality
+          ${analysis.ocrErrors.length > 0 ? 
+            `<br><small>OCR Errors detected: ${analysis.ocrErrors.join(', ')}</small>` : ''}
+        </div>
+      `;
+    }
+    
+    function analyzeOnly() {
+      const text = sampleText.value;
+      const analysis = qualityScorer.analyze(text);
+      
+      scoreDisplay.innerHTML = `
+        <div style="margin-bottom: 10px;">
+          <span class="score-badge ${analysis.score >= 70 ? 'score-good' : analysis.score >= 50 ? 'score-medium' : 'score-poor'}">
+            ${analysis.score}/100
+          </span>
+          Overall Quality Score
+        </div>
+        <div style="margin-bottom: 5px;"><strong>Word Count:</strong> ${analysis.wordCount}</div>
+        <div style="margin-bottom: 5px;"><strong>Common Words:</strong> ${analysis.commonWordCount} (${Math.round(analysis.commonWordRatio * 100)}%)</div>
+        ${analysis.ocrErrors.length > 0 ? 
+          `<div style="margin-bottom: 5px;"><strong>OCR Errors Found:</strong> ${analysis.ocrErrors.join(', ')}</div>` : ''}
+        ${analysis.uncommonPatterns.length > 0 ? 
+          `<div><strong>Unusual Patterns:</strong> ${analysis.uncommonPatterns.slice(0, 5).join(', ')}${analysis.uncommonPatterns.length > 5 ? '...' : ''}</div>` : ''}
+      `;
+      
+      correctionsNeeded.innerHTML = analysis.needsNormalization ? 
+        '<div style="color: #dc2626; font-weight: bold;">⚠️ This text needs normalization for better audio quality.</div>' :
+        '<div style="color: #059669; font-weight: bold;">✓ Text quality is good for audio conversion.</div>';
+      
+      qualityScoreDiv.style.display = 'block';
+      updateDisplays(text, text);
+    }
+    
+    function testBasicNormalization() {
+      const text = sampleText.value;
+      const normalized = normalizer.normalize(text, {
+        fixOCR: true,
+        expandAbbr: false,
+        formatParagraphs: true,
+        adaptive: false
+      });
+      
+      updateDisplays(text, normalized);
+      showSuccess('Basic normalization applied');
+    }
+    
+    function testAdaptiveNormalization() {
+      const text = sampleText.value;
+      const normalized = normalizer.normalize(text, {
+        fixOCR: true,
+        expandAbbr: false,
+        formatParagraphs: true,
+        adaptive: true
+      });
+      
+      updateDisplays(text, normalized);
+      showSuccess('Adaptive (smart) normalization applied');
+    }
+    
+    async function testAdvancedNormalization() {
+      const text = sampleText.value;
+      
+      try {
+        showLoading('Using LLM for advanced normalization...');
+        const normalized = await normalizer.advancedNormalize(text, {
+          fixOCR: true,
+          expandAbbr: false
+        });
+        
+        updateDisplays(text, normalized);
+        showSuccess('Advanced LLM normalization applied');
+      } catch (error) {
+        console.error('LLM normalization failed:', error);
+        alert('LLM normalization failed. Falling back to adaptive normalization.');
+        testAdaptiveNormalization();
+      }
+    }
+    
+    function resetText() {
+      sampleText.value = currentText;
+      updateDisplays(currentText, currentText);
+      qualityScoreDiv.style.display = 'none';
+      correctionsList.style.display = 'none';
+      showSuccess('Reset to original text');
+    }
+    
+    function showSuccess(message) {
+      const alert = document.createElement('div');
+      alert.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #10b981;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+      `;
+      alert.textContent = message;
+      document.body.appendChild(alert);
+      
+      setTimeout(() => {
+        alert.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => document.body.removeChild(alert), 300);
+      }, 3000);
+    }
+    
+    function showLoading(message) {
+      const loading = document.createElement('div');
+      loading.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #f59e0b;
+        color: white;
+        padding: 12px 20px;
+        border-radius: 8px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+      `;
+      loading.innerHTML = `<span style="margin-right: 10px;">⏳</span>${message}`;
+      document.body.appendChild(loading);
+      
+      return loading;
+    }
+    
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(100%); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(100%); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+    
+    // Initialize
+    updateDisplays(currentText, currentText);
+  </script>
+</body>
+</html>

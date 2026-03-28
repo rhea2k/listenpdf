@@ -3,22 +3,49 @@
 
 class TextNormalizer {
   constructor() {
+    // Initialize quality scorer
+    this.qualityScorer = new TextQualityScorer();
+    
     // Common OCR errors mapping
     this.ocrCorrections = {
-      // Common OCR misreads
+      // Single character confusions
+      '0': 'o',
+      '1': 'l',
+      '5': 's',
+      '8': 'b',
+      // Character pair confusions
       'rn': 'm',
       'cl': 'd',
       'vv': 'w',
       'ii': 'n',
-      '1': 'l',
-      '0': 'o',
-      '5': 's',
+      'cj': 'g',
+      'ft': 't',
+      'ff': 'f',
+      'tt': 't',
+      'nn': 'm',
+      'ri': 'n',
       // Common word misreads
       'tlie': 'the',
       'whicli': 'which',
       'wliat': 'what',
       'tliis': 'this',
       'tlien': 'then',
+      'tlieir': 'their',
+      'tliree': 'three',
+      'tlirough': 'through',
+      'someliling': 'something',
+      'evervlhing': 'everything',
+      'notlring': 'nothing',
+      'al': 'at',  // in "that" -> "th al"
+      'lor': 'for',
+      'lrom': 'from',
+      'lound': 'found',
+      'lo': 'to',
+      'lhe': 'the',
+      'ln': 'in',
+      'lts': 'its',
+      'lnter': 'inter',
+      'lnternational': 'international',
       // Add more as needed
     };
 
@@ -66,16 +93,97 @@ class TextNormalizer {
   }
 
   /**
-   * Fix common OCR errors
+   * Fix common OCR errors with context awareness
    */
   fixOCR(text) {
     let fixed = text;
     
-    // Apply OCR corrections
+    // First, fix character-level issues that are always wrong
+    // (like 'rn' -> 'm' when it's a standalone word)
     for (const [error, correction] of Object.entries(this.ocrCorrections)) {
-      const regex = new RegExp(`\\b${error}\\b`, 'gi');
+      // For short patterns (1-3 chars), they could be part of words
+      if (error.length <= 3) {
+        // Only replace if it's a whole word or common pattern
+        const regex = new RegExp(`\\b${error}\\b`, 'gi');
+        fixed = fixed.replace(regex, correction);
+      }
+    }
+    
+    // Fix common patterns that appear in the middle of words
+    fixed = this.fixCommonPatterns(fixed);
+    
+    // Fix numbers that should be letters (context-aware)
+    fixed = this.fixNumberLetterConfusions(fixed);
+    
+    return fixed;
+  }
+
+  /**
+   * Fix patterns that commonly appear within words
+   */
+  fixCommonPatterns(text) {
+    let fixed = text;
+    
+    // Patterns that are almost always wrong when they appear
+    const patterns = {
+      'tlie': 'the',
+      'whicli': 'which', 
+      'wliat': 'what',
+      'tliis': 'this',
+      'tlien': 'then',
+      'tlieir': 'their',
+      'tliree': 'three',
+      'tlirough': 'through'
+    };
+    
+    for (const [pattern, correction] of Object.entries(patterns)) {
+      const regex = new RegExp(pattern, 'gi');
       fixed = fixed.replace(regex, correction);
     }
+    
+    return fixed;
+  }
+
+  /**
+   * Context-aware number/letter confusion fixes
+   * e.g., "1995" should stay "1995" but "l995" should be "1995"
+   */
+  fixNumberLetterConfusions(text) {
+    let fixed = text;
+    
+    // Common patterns where 'l' should be '1' (in numbers)
+    // Look for patterns like "l9" (should be "19") or "2l" (should be "21")
+    const numberPatterns = [
+      // Years: 19xx, 20xx
+      /\b(l9\d{2})\b/gi,  // l995 -> 1995
+      /\b(2l\d{2})\b/gi,  // 2l00 -> 2100
+      // Decades: 1980s
+      /\b(l9\d{0}s)\b/gi,
+      // Page numbers: Page l, Chapter l
+      /\b(Page\s+)l\b/gi,
+      /\b(Chapter\s+)l\b/gi,
+      /\b(Figure\s+)l\b/gi,
+      /\b(Table\s+)l\b/gi
+    ];
+    
+    numberPatterns.forEach(pattern => {
+      fixed = fixed.replace(pattern, (match, p1) => {
+        return p1.replace(/l/gi, '1');
+      });
+    });
+    
+    // Fix '0' vs 'O' confusion in common contexts
+    // "Section 2.0" should stay, but "Secti0n" should be "Section"
+    const letterPatterns = [
+      /\b([A-Z][a-z]*)(0)([a-z]*)\b/gi,  // Word with 0 in middle
+      /\b([a-z]+)(0)([A-Z][a-z]*)\b/gi   // Mixed case with 0
+    ];
+    
+    letterPatterns.forEach(pattern => {
+      fixed = fixed.replace(pattern, (match, p1, p2, p3) => {
+        return p1 + 'o' + p3;
+      });
+    });
     
     return fixed;
   }
@@ -106,16 +214,55 @@ class TextNormalizer {
   }
 
   /**
+   * Remove PDF artifacts like page numbers, headers, footers
+   */
+  removePDFArtifacts(text) {
+    let cleaned = text;
+    
+    // Remove common page number patterns
+    cleaned = cleaned.replace(/\n\s*\d+\s*\n/g, '\n');  // Isolated page numbers
+    cleaned = cleaned.replace(/\bPage\s+\d+\s+of\s+\d+\b/gi, '');
+    cleaned = cleaned.replace(/\b-\s*\d+\s*-\b/g, '');   // Centered page numbers
+    
+    // Remove common header/footer patterns
+    const headerFooterPatterns = [
+      // Date patterns
+      /\b(January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2},\s+\d{4}\b/gi,
+      // Author names (common in headers)
+      /\b[A-Z][a-z]+\s+[A-Z][a-z]+\b(?=\s*\n)/g,
+      // Conference/journal names in all caps
+      /\b[A-Z]{2,}\s+[A-Z]{2,}(?:\s+[A-Z]{2,})*\b(?=\s*\n)/g,
+      // Short lines that are likely headers
+      /^.{1,30}$\n/gm
+    ];
+    
+    headerFooterPatterns.forEach(pattern => {
+      cleaned = cleaned.replace(pattern, '');
+    });
+    
+    // Remove excessive whitespace created by removals
+    cleaned = cleaned.replace(/\n\s*\n\s*\n+/g, '\n\n');
+    
+    return cleaned.trim();
+  }
+
+  /**
    * Format paragraphs - detect paragraph breaks
    */
   formatParagraphs(text) {
+    // First remove artifacts
+    let cleaned = this.removePDFArtifacts(text);
+    
     // Look for double line breaks or indentation as paragraph markers
-    const paragraphs = text.split(/\n\s*\n/);
+    const paragraphs = cleaned.split(/\n\s*\n/);
     
     // Clean each paragraph
     const cleanedParagraphs = paragraphs.map(p => {
       const trimmed = p.trim();
       if (!trimmed) return '';
+      
+      // Skip very short lines that might be leftover artifacts
+      if (trimmed.length < 10 && /^\W*$/.test(trimmed)) return '';
       
       // Ensure paragraph starts with capital letter
       return this.capitalizeSentences(trimmed);
@@ -126,23 +273,98 @@ class TextNormalizer {
   }
 
   /**
+   * Smart normalization - adapts based on text quality
+   */
+  smartNormalize(text, options = {}) {
+    const {
+      fixOCR = true,
+      expandAbbr = false,
+      formatParagraphs = true,
+      adaptive = true  // Use quality score to adjust normalization
+    } = options;
+    
+    let normalized = text;
+    
+    // Analyze text quality if adaptive mode
+    let qualityScore = 100;
+    let needsOCRCorrection = fixOCR;
+    
+    if (adaptive && fixOCR) {
+      const analysis = this.qualityScorer.analyze(text);
+      qualityScore = analysis.score;
+      
+      // Adjust normalization based on quality
+      needsOCRCorrection = analysis.needsNormalization;
+      
+      console.log(`Text quality score: ${qualityScore}/100, Needs OCR correction: ${needsOCRCorrection}`);
+    }
+    
+    // Apply basic cleanup first (always)
+    normalized = this.basicCleanup(normalized);
+    
+    // Fix OCR errors if needed
+    if (needsOCRCorrection) {
+      normalized = this.fixOCR(normalized);
+      
+      // Re-score after OCR correction
+      if (adaptive) {
+        const newScore = this.qualityScorer.score(normalized);
+        console.log(`Quality after OCR correction: ${newScore}/100`);
+      }
+    }
+    
+    // Expand abbreviations if requested
+    if (expandAbbr) {
+      normalized = this.expandAbbreviations(normalized, true);
+    }
+    
+    // Format paragraphs if requested
+    if (formatParagraphs) {
+      normalized = this.formatParagraphs(normalized);
+    }
+    
+    return normalized;
+  }
+  
+  /**
    * Main normalization function
    */
   normalize(text, options = {}) {
     const {
       fixOCR = true,
       expandAbbr = false,
-      formatParagraphs = true
+      formatParagraphs = true,
+      adaptive = false  // Default to non-adaptive for backward compatibility
     } = options;
     
     let normalized = text;
     
-    // Apply basic cleanup first
+    // Analyze text quality if adaptive mode
+    let qualityScore = 100;
+    let needsOCRCorrection = fixOCR;
+    
+    if (adaptive && fixOCR) {
+      const analysis = this.qualityScorer.analyze(text);
+      qualityScore = analysis.score;
+      
+      // Adjust normalization based on quality
+      needsOCRCorrection = analysis.needsNormalization;
+      
+      console.log(`Text quality score: ${qualityScore}/100, Needs OCR correction: ${needsOCRCorrection}`);
+    }
+    
+    // Apply basic cleanup first (always)
     normalized = this.basicCleanup(normalized);
     
-    // Fix OCR errors if requested
-    if (fixOCR) {
+    // Fix OCR errors if needed
+    if (needsOCRCorrection) {
       normalized = this.fixOCR(normalized);
+      
+      // Re-score after OCR correction
+      if (adaptive) {
+        const newScore = this.qualityScorer.score(normalized);
+        console.log(`Quality after OCR correction: ${newScore}/100`);
+      }
     }
     
     // Expand abbreviations if requested

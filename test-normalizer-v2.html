@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Text Normalizer Test v2</title>
+  <script src="text-normalizer.js"></script>
+</head>
+<body>
+  <h1>Text Normalizer Test v2 - Enhanced OCR Correction</h1>
+  
+  <div>
+    <h3>Input Text (simulating common OCR errors):</h3>
+    <textarea id="inputText" rows="15" cols="100">
+Page 3 of 15
+
+INTERNATIONAL CONFERENCE ON OCR TECHNOLOGY
+John Smith, Jane Doe
+
+tlie quick brown fox jumped over tlie lazy dog.
+whicli was quite an impressive feat. tliis is a test
+of tlie OCR correction system.
+
+Common errors: rn vs m, cl vs d, vv vs w.
+Numbers confused: l995 should be 1995, but lo should be to.
+Section 2.0 Methodology vs Secti0n (should be Section).
+
+Page 4
+
+Al tlie beginning of tlie study, we lound that
+notlring worked as expected. We had to go lrom
+scratch and rebuild evervlhing.
+
+The year was l995 when digital OCR became popular.
+In Chapter l, we discuss tlie basics. In Chapter 2,
+we cover advanced topics.
+
+Header: Journal of Computer Science
+Footer: Page 4 of 15
+
+This is a hyphen-
+ated word that should be joined across line breaks.
+
+Multiple   spaces   should   be   fixed. And
+line breaks in the middle of sentences should
+be handled properly.
+
+e.g., abbreviations like etc. and i.e. can be expanded.
+    </textarea>
+  </div>
+  
+  <div>
+    <button onclick="testNormalization()">Test Enhanced Normalization</button>
+    <button onclick="testBasicOnly()">Test Basic Only (No OCR fix)</button>
+  </div>
+  
+  <div style="display: flex; gap: 20px;">
+    <div style="flex: 1;">
+      <h3>Normalized Output:</h3>
+      <textarea id="outputText" rows="15" cols="100" readonly></textarea>
+    </div>
+    <div style="flex: 1;">
+      <h3>Changes Made:</h3>
+      <div id="changesList" style="border: 1px solid #ccc; padding: 10px; height: 300px; overflow-y: auto; font-family: monospace;"></div>
+    </div>
+  </div>
+  
+  <script>
+    function highlightChanges(original, normalized) {
+      const changes = [];
+      const origWords = original.split(/\s+/);
+      const normWords = normalized.split(/\s+/);
+      
+      for (let i = 0; i < Math.max(origWords.length, normWords.length); i++) {
+        const orig = origWords[i] || '';
+        const norm = normWords[i] || '';
+        
+        if (orig !== norm && orig && norm) {
+          changes.push(`${orig} → ${norm}`);
+        }
+      }
+      
+      return changes;
+    }
+    
+    function testNormalization() {
+      const input = document.getElementById('inputText').value;
+      const normalizer = new TextNormalizer();
+      
+      // Test enhanced normalization
+      const normalized = normalizer.normalize(input, {
+        fixOCR: true,
+        expandAbbr: true,
+        formatParagraphs: true
+      });
+      
+      document.getElementById('outputText').value = normalized;
+      
+      // Show changes
+      const changes = highlightChanges(input, normalized);
+      document.getElementById('changesList').innerHTML = 
+        changes.length > 0 
+          ? changes.map(c => `<div>${c}</div>`).join('')
+          : '<div>No changes detected</div>';
+    }
+    
+    function testBasicOnly() {
+      const input = document.getElementById('inputText').value;
+      const normalizer = new TextNormalizer();
+      
+      // Test without OCR fixes
+      const normalized = normalizer.normalize(input, {
+        fixOCR: false,
+        expandAbbr: false,
+        formatParagraphs: true
+      });
+      
+      document.getElementById('outputText').value = normalized;
+      
+      // Show changes
+      const changes = highlightChanges(input, normalized);
+      document.getElementById('changesList').innerHTML = 
+        changes.length > 0 
+          ? changes.map(c => `<div>${c}</div>`).join('')
+          : '<div>No changes detected</div>';
+    }
+    
+    // Run test on load
+    window.onload = testNormalization;
+  </script>
+</body>
+</html>

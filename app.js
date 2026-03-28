@@ -165,9 +165,22 @@ async function handleFile(file) {
     const normalizer = new TextNormalizer();
     
     // Show loading state
-    textContent.textContent = 'Processing text for better audio quality...';
+    textContent.textContent = 'Analyzing text quality...';
     
     try {
+      // Analyze text quality first
+      const qualityScorer = new TextQualityScorer();
+      const qualityAnalysis = qualityScorer.analyze(rawText);
+      
+      // Update UI with quality info
+      const qualityInfo = `Text quality: ${qualityAnalysis.score}/100`;
+      if (qualityAnalysis.score < 70) {
+        textContent.textContent = `Text needs improvement (${qualityAnalysis.score}/100). Applying corrections...`;
+      } else {
+        textContent.textContent = `Text quality good (${qualityAnalysis.score}/100). Optimizing for audio...`;
+      }
+      
+      // Apply normalization based on settings and quality
       if (advancedNormalizationCheckbox.checked) {
         // Use advanced normalization with LLM
         fullText = await normalizer.advancedNormalize(rawText, {
@@ -175,17 +188,22 @@ async function handleFile(file) {
           expandAbbr: false
         });
       } else {
-        // Use basic normalization
+        // Use adaptive normalization based on quality score
         fullText = normalizer.normalize(rawText, {
           fixOCR: true,
           expandAbbr: false,
-          formatParagraphs: true
+          formatParagraphs: true,
+          adaptive: true  // Use quality score to optimize
         });
       }
       
       // Split into words for progress tracking
       words = fullText.split(/\s+/).filter(w => w.length > 0);
-      textContent.textContent = fullText;
+      
+      // Show final text with quality info
+      const finalQuality = qualityScorer.score(fullText);
+      const improvement = finalQuality - qualityAnalysis.score;
+      textContent.textContent = `${fullText}\n\n---\nText Quality: ${qualityAnalysis.score}/100 → ${finalQuality}/100 (${improvement > 0 ? '+' : ''}${improvement})`;
       
     } catch (error) {
       console.error('Text normalization failed:', error);
