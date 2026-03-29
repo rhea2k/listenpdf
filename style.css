@@ -51,6 +51,27 @@ progress { flex: 1; height: 8px; border-radius: 4px; }
 
 .download-option { margin-top: 20px; padding: 15px; background: #fef3c7; border-radius: 8px; border: 1px solid var(--premium); }
 
+/* Page Navigation */
+.page-navigation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 15px 0;
+  padding: 10px;
+  background: #f8fafc;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+}
+
+#current-page {
+  font-weight: 600;
+  color: var(--primary);
+}
+
+#total-pages {
+  color: var(--secondary);
+}
+
 /* Modal */
 .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; z-index: 1000; }
 .modal-content { background: white; padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; position: relative; box-shadow: 0 10px 40px rgba(0,0,0,0.2); }

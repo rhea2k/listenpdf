@@ -16,6 +16,8 @@ pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs
 // State
 let pdfDoc = null;
 let fullText = '';
+let pageTexts = []; // Array to store text for each page
+let currentPage = 1; // Current page being read
 let speechSynthesis = window.speechSynthesis;
 let currentUtterance = null;
 let voices = [];
@@ -39,6 +41,10 @@ const premiumVoiceCheckbox = document.getElementById('premium-voice');
 const playBtn = document.getElementById('play-btn');
 const pauseBtn = document.getElementById('pause-btn');
 const stopBtn = document.getElementById('stop-btn');
+const prevPageBtn = document.getElementById('prev-page-btn');
+const nextPageBtn = document.getElementById('next-page-btn');
+const currentPageSpan = document.getElementById('current-page');
+const totalPagesSpan = document.getElementById('total-pages');
 const progressBar = document.getElementById('progress-bar');
 const progressText = document.getElementById('progress-text');
 const downloadSection = document.getElementById('download-section');
@@ -97,6 +103,10 @@ function init() {
     }
   });
   stopBtn.addEventListener('click', stopPlaying);
+  
+  // Page navigation
+  prevPageBtn.addEventListener('click', goToPreviousPage);
+  nextPageBtn.addEventListener('click', goToNextPage);
 
   // Premium unlock modal
   unlockPremiumBtn.addEventListener('click', () => modal.classList.remove('hidden'));
@@ -151,71 +161,93 @@ async function handleFile(file) {
     pdfTitle.textContent = file.name.replace('.pdf', '');
     pageCount.textContent = `Pages: ${pdfDoc.numPages}`;
 
-    // Extract text from all pages
+    // Extract text from each page separately
+    pageTexts = [];
     fullText = '';
+    currentPage = 1; // Reset to first page
+    
     for (let i = 1; i <= pdfDoc.numPages; i++) {
       const page = await pdfDoc.getPage(i);
       const textContent = await page.getTextContent();
-      const pageText = textContent.items.map(item => item.str).join(' ');
-      fullText += pageText + '\n';
+      const rawPageText = textContent.items.map(item => item.str).join(' ');
+      pageTexts.push(rawPageText);
+      fullText += rawPageText + '\n';
     }
-
-    // Apply text normalization for better TTS
-    const rawText = fullText;
+    
+    // Normalize each page separately
     const normalizer = new TextNormalizer();
+    const qualityScorer = new TextQualityScorer();
     
     // Show loading state
-    textContent.textContent = 'Analyzing text quality...';
+    textContent.textContent = `Processing ${pdfDoc.numPages} pages...`;
     
-    try {
-      // Analyze text quality first
-      const qualityScorer = new TextQualityScorer();
-      const qualityAnalysis = qualityScorer.analyze(rawText);
+    // Normalize each page
+    const normalizedPageTexts = [];
+    let totalQualityBefore = 0;
+    let totalQualityAfter = 0;
+    
+    for (let i = 0; i < pageTexts.length; i++) {
+      const pageNum = i + 1;
+      const rawPageText = pageTexts[i];
       
-      // Update UI with quality info
-      const qualityInfo = `Text quality: ${qualityAnalysis.score}/100`;
-      if (qualityAnalysis.score < 70) {
-        textContent.textContent = `Text needs improvement (${qualityAnalysis.score}/100). Applying corrections...`;
-      } else {
-        textContent.textContent = `Text quality good (${qualityAnalysis.score}/100). Optimizing for audio...`;
+      // Update loading status
+      if (pageTexts.length > 1) {
+        textContent.textContent = `Processing page ${pageNum} of ${pageTexts.length}...`;
       }
       
-      // Apply normalization based on settings and quality
+      // Analyze page quality
+      const pageQuality = qualityScorer.analyze(rawPageText);
+      totalQualityBefore += pageQuality.score;
+      
+      // Normalize this page
+      let normalizedPageText;
       if (advancedNormalizationCheckbox.checked) {
-        // Use advanced normalization with LLM
-        fullText = await normalizer.advancedNormalize(rawText, {
-          fixOCR: true,
-          expandAbbr: false
-        });
+        // Use LLM for advanced normalization
+        try {
+          normalizedPageText = await normalizer.advancedNormalize(rawPageText, {
+            fixOCR: true,
+            expandAbbr: false
+          });
+        } catch (error) {
+          console.warn(`LLM failed for page ${pageNum}, using basic normalization:`, error);
+          normalizedPageText = normalizer.normalize(rawPageText, {
+            fixOCR: true,
+            expandAbbr: false,
+            formatParagraphs: true
+          });
+        }
       } else {
-        // Use adaptive normalization based on quality score
-        fullText = normalizer.normalize(rawText, {
+        // Use basic normalization
+        normalizedPageText = normalizer.normalize(rawPageText, {
           fixOCR: true,
           expandAbbr: false,
           formatParagraphs: true,
-          adaptive: true  // Use quality score to optimize
+          adaptive: true
         });
       }
       
-      // Split into words for progress tracking
-      words = fullText.split(/\s+/).filter(w => w.length > 0);
+      // Analyze normalized quality
+      const normalizedQuality = qualityScorer.score(normalizedPageText);
+      totalQualityAfter += normalizedQuality;
       
-      // Show final text with quality info
-      const finalQuality = qualityScorer.score(fullText);
-      const improvement = finalQuality - qualityAnalysis.score;
-      textContent.textContent = `${fullText}\n\n---\nText Quality: ${qualityAnalysis.score}/100 → ${finalQuality}/100 (${improvement > 0 ? '+' : ''}${improvement})`;
-      
-    } catch (error) {
-      console.error('Text normalization failed:', error);
-      // Fall back to basic normalization
-      fullText = normalizer.normalize(rawText, {
-        fixOCR: true,
-        expandAbbr: false,
-        formatParagraphs: true
-      });
-      words = fullText.split(/\s+/).filter(w => w.length > 0);
-      textContent.textContent = fullText;
+      normalizedPageTexts.push(normalizedPageText);
     }
+    
+    // Update pageTexts with normalized versions
+    pageTexts = normalizedPageTexts;
+    
+    // Combine all normalized pages for display
+    fullText = pageTexts.join('\n\n');
+    words = fullText.split(/\s+/).filter(w => w.length > 0);
+    
+    // Calculate average quality scores
+    const avgQualityBefore = Math.round(totalQualityBefore / pageTexts.length);
+    const avgQualityAfter = Math.round(totalQualityAfter / pageTexts.length);
+    const avgImprovement = avgQualityAfter - avgQualityBefore;
+    
+    // Show first page and quality info
+    updatePageDisplay();
+    textContent.textContent = `${pageTexts[0]}\n\n---\nPage 1 of ${pageTexts.length} | Text Quality: ${avgQualityBefore}/100 → ${avgQualityAfter}/100 (${avgImprovement > 0 ? '+' : ''}${avgImprovement})`;
 
     uploadSection.classList.add('hidden');
     playerSection.classList.remove('hidden');
@@ -243,11 +275,20 @@ function populateVoiceList() {
 // TTS Playback
 function startPlaying() {
   if (isPlaying) return;
+  
+  // Make sure we have page text
+  if (!pageTexts || pageTexts.length === 0) {
+    alert('No text available to play. Please upload a PDF first.');
+    return;
+  }
 
-  // For now, always use Web Speech API.
-  // Premium voice (OpenAI) will be implemented later as an optional download/MP3 feature.
-
-  const textToSpeak = fullText;
+  // Get text from current page only
+  const textToSpeak = pageTexts[currentPage - 1];
+  
+  if (!textToSpeak || textToSpeak.trim().length === 0) {
+    alert('This page has no text to read.');
+    return;
+  }
 
   currentUtterance = new SpeechSynthesisUtterance(textToSpeak);
   const selectedVoiceIndex = voiceSelect.value;
@@ -256,8 +297,7 @@ function startPlaying() {
   currentUtterance.pitch = 1;
   currentUtterance.volume = 1;
 
-  // Word-by-word progress tracking is tricky with Web Speech API.
-  // We'll use onboundary event for word boundaries.
+  // Word-by-word progress tracking
   let wordIndex = 0;
   currentUtterance.onboundary = (event) => {
     if (event.name === 'word') {
@@ -270,6 +310,15 @@ function startPlaying() {
 
   currentUtterance.onend = () => {
     stopPlaying();
+    // Auto-advance to next page when finished
+    if (currentPage < pageTexts.length) {
+      setTimeout(() => {
+        currentPage++;
+        updatePageDisplay();
+        // Auto-play next page
+        setTimeout(() => startPlaying(), 500);
+      }, 1000); // 1 second pause between pages
+    }
   };
 
   speechSynthesis.speak(currentUtterance);
@@ -301,6 +350,59 @@ function verifyUnlock() {
   alert('Thank you for your support! We will verify your transaction and enable premium features within 24 hours. For now, you can continue using the free version.');
   document.getElementById('manual-unlock-form').classList.add('hidden');
   modal.classList.add('hidden');
+}
+
+// Page navigation functions
+function updatePageDisplay() {
+  if (!pageTexts || pageTexts.length === 0) return;
+  
+  // Update current page display
+  currentPageSpan.textContent = `Page ${currentPage}`;
+  totalPagesSpan.textContent = ` of ${pageTexts.length}`;
+  
+  // Update navigation buttons
+  prevPageBtn.disabled = currentPage <= 1;
+  nextPageBtn.disabled = currentPage >= pageTexts.length;
+  
+  // Show current page text
+  const pageText = pageTexts[currentPage - 1];
+  
+  // Show page text with page indicator
+  const qualityScorer = new TextQualityScorer();
+  const pageQuality = qualityScorer.score(pageText);
+  let qualityIndicator = '';
+  
+  if (pageQuality < 60) {
+    qualityIndicator = ` (Quality: ${pageQuality}/100 - may need manual review)`;
+  }
+  
+  textContent.textContent = `${pageText}\n\n---\nPage ${currentPage} of ${pageTexts.length}${qualityIndicator}`;
+  
+  // Update words for progress tracking
+  words = pageText.split(/\s+/).filter(w => w.length > 0);
+  
+  // Reset progress
+  progressBar.value = 0;
+  progressText.textContent = '0%';
+  
+  // Stop any current playback
+  if (isPlaying) {
+    stopPlaying();
+  }
+}
+
+function goToNextPage() {
+  if (currentPage < pageTexts.length) {
+    currentPage++;
+    updatePageDisplay();
+  }
+}
+
+function goToPreviousPage() {
+  if (currentPage > 1) {
+    currentPage--;
+    updatePageDisplay();
+  }
 }
 
 // Placeholder for OpenAI TTS download
